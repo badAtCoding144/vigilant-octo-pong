@@ -1,21 +1,11 @@
+<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Pong</title>
-    <style>
-        canvas {
-            background: black;
-            display: block;
-            margin: auto;
-        }
-        #scoreBoard {
-            text-align: center;
-            font-size: 24px;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
     <h1>Multiplayer Pong</h1>
@@ -26,127 +16,7 @@
     <canvas id="gameCanvas" width="600" height="400"></canvas>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        let roomId = null;
-        let playerIndex = 0;
-        let gameActive = false;
-
-        const paddleWidth = 10, paddleHeight = 100;
-        let paddleY = [150, 150];
-        let ballX = 300, ballY = 200;
-        let ballSpeedX = 5, ballSpeedY = 5;
-        let scores = [0, 0]; // Track the scores
-
-        document.getElementById('createGame').addEventListener('click', () => {
-            socket.emit('createGame');
-        });
-
-        document.getElementById('restartGame').addEventListener('click', () => {
-            socket.emit('restartGame', roomId);
-        });
-
-        socket.on('roomCreated', (id) => {
-            roomId = id;
-            document.getElementById('createGame').style.display = 'none';
-            const link = `${window.location.href}?room=${roomId}`;
-            document.getElementById('gameLink').innerHTML = `Share this link: <a href="${link}">${link}</a>`;
-            document.getElementById('gameLink').style.display = 'block';
-            document.getElementById('restartGame').style.display = 'block';
-        });
-
-        socket.on('startGame', (data) => {
-            roomId = data.roomId;
-            playerIndex = data.playerIndex; // Identify which player is which
-            gameActive = true;
-            startGame();
-        });
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const joinRoomId = urlParams.get('room');
-        if (joinRoomId) {
-            socket.emit('joinGame', joinRoomId);
-        }
-
-        socket.on('roomError', (message) => {
-            alert(message);
-        });
-
-        function startGame() {
-            canvas.addEventListener('mousemove', (event) => {
-                if (gameActive) {
-                    const rect = canvas.getBoundingClientRect();
-                    const paddleYPos = event.clientY - rect.top - paddleHeight / 2;
-
-                    // Emit the correct paddle position based on the player
-                    socket.emit('gameUpdate', { roomId, paddleY: paddleYPos });
-                }
-            });
-
-            setInterval(() => {
-                if (gameActive) {
-                    updateGame();
-                    drawGame();
-                }
-            }, 1000 / 30);
-        }
-
-        function updateGame() {
-            ballX += ballSpeedX;
-            ballY += ballSpeedY;
-            if (ballY <= 0 || ballY >= canvas.height) ballSpeedY *= -1;
-            if (ballX <= 0 || ballX >= canvas.width) {
-                ballSpeedX *= -1;
-                ballX = canvas.width / 2;
-                ballY = canvas.height / 2;
-            }
-            if ((ballX <= paddleWidth && ballY >= paddleY[0] && ballY <= paddleY[0] + paddleHeight) ||
-                (ballX >= canvas.width - paddleWidth && ballY >= paddleY[1] && ballY <= paddleY[1] + paddleHeight)) {
-                ballSpeedX *= -1;
-            }
-            socket.emit('gameUpdate', { roomId, ballX, ballY });
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (playerIndex === 1) {
-                // Flip the canvas for the second player
-                ctx.save();
-                ctx.translate(canvas.width, canvas.height);
-                ctx.rotate(Math.PI);
-            }
-
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, paddleY[0], paddleWidth, paddleHeight); // Player 1 paddle
-            ctx.fillRect(canvas.width - paddleWidth, paddleY[1], paddleWidth, paddleHeight); // Player 2 paddle
-            ctx.beginPath();
-            ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
-            ctx.fill();
-
-            if (playerIndex === 1) {
-                ctx.restore(); // Restore the canvas orientation for the next frame
-            }
-
-            // Update the score display
-            document.getElementById('scoreBoard').innerText = `Score: ${scores[0]} - ${scores[1]}`;
-        }
-
-        socket.on('gameUpdate', (data) => {
-            paddleY = data.paddleY; // Update paddles for both players
-            ballX = data.ballX || ballX;
-            ballY = data.ballY || ballY;
-            scores = data.scores || scores;
-        });
-
-        socket.on('restartGame', (newScores) => {
-            ballX = 300; // Reset the ball position
-            ballY = 200;
-            scores = newScores;
-            drawGame(); // Redraw the game to show the reset state
-        });
-    </script>
+    <script src="/js/main.js"></script>
+    <script src="/js/game.js"></script>
 </body>
 </html>
