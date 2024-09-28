@@ -153,7 +153,6 @@ function resetBall(room) {
   room.ball.speedY = 5;
 }
 
-server.listen(PORT, '192.168.1.26', () => {
-  console.log(`Server is running on http://192.168.1.26:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
-
